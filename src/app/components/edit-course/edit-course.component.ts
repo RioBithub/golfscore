@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +20,6 @@ import { AppStateService } from '../../services/app-state.service';
 import { CourseService } from '../../services/course.service';
 import { RoundService } from '../../services/round.service';
 import { AreYouSureDialogComponent } from '../are-you-sure-dialog/are-you-sure-dialog.component';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-edit-course',

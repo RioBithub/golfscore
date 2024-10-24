@@ -1,4 +1,4 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
   AverageScorePipe,
@@ -46,6 +46,7 @@ import { TotalRoundScorePipe } from './total-round-score.pipe';
     AverageScoreToParPipe,
     CountValidRoundsToAveragePipe,
     DecimalPipe,
+    DatePipe,
   ],
 })
 export class PipesModule {}

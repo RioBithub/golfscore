@@ -6,4 +6,6 @@ export interface User extends StorageObject {
   courseIds: string[];
   appFontScaling: number;
   courseStatsFilterSelect?: string[];
+  earliestDateISO?: string;
+  latestDateISO?: string;
 }

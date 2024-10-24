@@ -54,7 +54,7 @@ interface ColumnDef {
     MatDialogModule,
     AutosizeModule,
   ],
-  providers: [DatePipe, provideNativeDateAdapter()],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './edit-round.component.html',
   styleUrl: './edit-round.component.scss',
 })
@@ -194,7 +194,7 @@ export class EditRoundComponent {
     return true;
   }
 
-  public addEvent(event: MatDatepickerInputEvent<Date>): void {
+  public dateChanged(event: MatDatepickerInputEvent<Date>): void {
     if (event.value) {
       this.editingRound.dateStringISO = event.value.toISOString();
     }

@@ -32,7 +32,7 @@
         matInput
         [matDatepicker]="picker3"
         [value]="editingRound.dateStringISO"
-        (dateInput)="addEvent($event)"
+        (dateInput)="dateChanged($event)"
       />
       <mat-hint>MM/DD/YYYY</mat-hint>
       <mat-datepicker-toggle

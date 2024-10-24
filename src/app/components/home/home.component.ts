@@ -13,7 +13,11 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatOption, MatRippleModule } from '@angular/material/core';
+import {
+  MatOption,
+  MatRippleModule,
+  provideNativeDateAdapter,
+} from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -29,6 +33,12 @@ import { PipesModule } from '../../pipes/pipes.module';
 import { AppStateService } from '../../services/app-state.service';
 import { CourseService } from '../../services/course.service';
 import { RoundService } from '../../services/round.service';
+import {
+  MatDatepicker,
+  MatDatepickerInputEvent,
+  MatDatepickerModule,
+} from '@angular/material/datepicker';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-home',
@@ -38,18 +48,21 @@ import { RoundService } from '../../services/round.service';
     MatIconModule,
     PipesModule,
     DatePipe,
+    MatDatepickerModule,
     MatButtonModule,
     MatRippleModule,
     MatCardModule,
     MatSliderModule,
     FormsModule,
     MatFormFieldModule,
+    MatInputModule,
     MatSelectModule,
     ReactiveFormsModule,
     MatCheckboxModule,
     CommonModule,
     MatDividerModule,
   ],
+  providers: [provideNativeDateAdapter()],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -68,6 +81,21 @@ export class HomeComponent implements OnInit, AfterViewInit {
     });
     return map;
   });
+
+  public datePickerFilterOutBefore = (d: Date | null): boolean => {
+    if (!this.currentUser?.earliestDateISO || !d) {
+      return true;
+    }
+    return d >= new Date(this.currentUser.earliestDateISO);
+  };
+
+  public datePickerFilterOutAfter = (d: Date | null): boolean => {
+    if (!this.currentUser?.latestDateISO || !d) {
+      return true;
+    }
+    return d < new Date(this.currentUser.latestDateISO);
+  };
+
   public currentUser: User | null;
 
   courseStatsFilter = new FormControl<string[]>([]);
@@ -201,11 +229,78 @@ export class HomeComponent implements OnInit, AfterViewInit {
 
   private updateFilteredRounds(): void {
     this.filteredRounds.set(
-      this.rounds()?.filter((round) =>
-        this.courseStatsFilter.value?.length
-          ? this.courseStatsFilter.value?.includes(round?.courseId)
-          : true,
-      ) || [],
+      this.rounds()?.filter((round) => this.shouldShowRound(round)) || [],
     );
+  }
+
+  private shouldShowRound(round: Round) {
+    if (
+      this.courseStatsFilter.value?.length &&
+      this.courseStatsFilter.value.length !== this.courseIdOptions()?.length &&
+      !this.courseStatsFilter.value.includes(round?.courseId)
+    ) {
+      return false;
+    }
+    if (round?.dateStringISO) {
+      const roundDate = new Date(round.dateStringISO);
+      if (
+        this.currentUser?.earliestDateISO &&
+        new Date(this.currentUser.earliestDateISO) > roundDate
+      ) {
+        return false;
+      }
+      if (
+        this.currentUser?.latestDateISO &&
+        new Date(this.currentUser.latestDateISO) <= roundDate
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public earliestDateChanged(
+    event: MatDatepickerInputEvent<Date> | null,
+    picker: MatDatepicker<Date>,
+  ): void {
+    if (this.currentUser) {
+      this.currentUser.earliestDateISO = event?.value?.toISOString();
+      this.updateFilteredRounds();
+      this.saveUser();
+      picker.close();
+    }
+  }
+
+  public latestDateChanged(
+    event: MatDatepickerInputEvent<Date> | null,
+    picker: MatDatepicker<Date>,
+  ): void {
+    if (this.currentUser) {
+      this.currentUser.latestDateISO = this.justBeforeNextDay(
+        event?.value,
+      )?.toISOString();
+      this.updateFilteredRounds();
+      this.saveUser();
+      picker.close();
+    }
+  }
+
+  public clearRoundFilters(): void {
+    if (this.currentUser) {
+      delete this.currentUser.earliestDateISO;
+      delete this.currentUser.latestDateISO;
+      this.select?.options?.forEach((item: MatOption) => item.deselect());
+      this.reevaluateAllSelectedStatus(true);
+    }
+  }
+
+  private justBeforeNextDay(date?: Date | null): Date | null {
+    if (!date) {
+      return null;
+    }
+    var newDate = new Date(date.valueOf());
+    newDate.setDate(date.getDate() + 1);
+    newDate.setMilliseconds(date.getMilliseconds() - 1);
+    return newDate;
   }
 }

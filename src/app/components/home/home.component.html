@@ -1,52 +1,140 @@
 @if (rounds().length) {
-  @if (courseIdOptions().length > 1) {
-    <div class="full-width-center">
-      <mat-form-field class="almost-full-width-input">
-        <mat-label>Filter Results By Course(s)</mat-label>
-        <mat-select
-          #courseStatsFilterSelect
-          [formControl]="courseStatsFilter"
-          multiple
-          (openedChange)="!$event && reevaluateAllSelectedStatus(true)"
-        >
-          <mat-select-trigger>
-            @if (allSelected) {
-              All Courses
-            } @else {
-              {{
-                courseMap().get(courseStatsFilter.value?.[0] || "")?.name || ""
-              }}
-              @if ((courseStatsFilter.value?.length || 0) > 1) {
-                <span>
-                  (+{{ (courseStatsFilter.value?.length || 0) - 1 }}
-                  {{
-                    courseStatsFilter.value?.length === 2 ? "other" : "others"
-                  }})
-                </span>
-              }
-            }
-          </mat-select-trigger>
-          <div class="select-all" mat-ripple (click)="toggleAllSelection()">
-            <mat-checkbox
-              style="width: 100%"
-              [(ngModel)]="allSelected"
-              [ngModelOptions]="{ standalone: true }"
-            >
-              Select All
-            </mat-checkbox>
+  <div class="padding-inline-8">
+    <mat-card appearance="outlined" class="center-text">
+      <mat-card-title>Filter Results</mat-card-title>
+      <mat-card-content class="padding-inline-8">
+        <div class="full-width-center space-evenly padding-bottom-8">
+          <button mat-stroked-button (click)="clearRoundFilters()">
+            <mat-icon>filter_alt_off</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+
+        @if (courseIdOptions().length > 1) {
+          <div class="full-width-center">
+            <mat-form-field class="almost-full-width-input">
+              <mat-label>Filter Results By Course(s)</mat-label>
+              <mat-select
+                #courseStatsFilterSelect
+                [formControl]="courseStatsFilter"
+                multiple
+                (openedChange)="!$event && reevaluateAllSelectedStatus(true)"
+              >
+                <mat-select-trigger>
+                  @if (allSelected) {
+                    All Courses
+                  } @else {
+                    {{
+                      courseMap().get(courseStatsFilter.value?.[0] || "")
+                        ?.name || ""
+                    }}
+                    @if ((courseStatsFilter.value?.length || 0) > 1) {
+                      <span>
+                        (+{{ (courseStatsFilter.value?.length || 0) - 1 }}
+                        {{
+                          courseStatsFilter.value?.length === 2
+                            ? "other"
+                            : "others"
+                        }})
+                      </span>
+                    }
+                  }
+                </mat-select-trigger>
+                <div
+                  class="select-all"
+                  mat-ripple
+                  (click)="toggleAllSelection()"
+                >
+                  <mat-checkbox
+                    style="width: 100%"
+                    [(ngModel)]="allSelected"
+                    [ngModelOptions]="{ standalone: true }"
+                  >
+                    Select All
+                  </mat-checkbox>
+                </div>
+                <mat-divider></mat-divider>
+                @for (topping of courseIdOptions(); track topping) {
+                  <mat-option
+                    [value]="topping"
+                    (click)="reevaluateAllSelectedStatus()"
+                    >{{ courseMap().get(topping)?.name }}</mat-option
+                  >
+                }
+              </mat-select>
+            </mat-form-field>
           </div>
-          <mat-divider></mat-divider>
-          @for (topping of courseIdOptions(); track topping) {
-            <mat-option
-              [value]="topping"
-              (click)="reevaluateAllSelectedStatus()"
-              >{{ courseMap().get(topping)?.name }}</mat-option
-            >
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-  }
+        }
+
+        <div class="full-width-center">
+          <mat-form-field class="almost-full-width-input">
+            <mat-label>Set Earliest Date</mat-label>
+            <input
+              matInput
+              [matDatepickerFilter]="datePickerFilterOutAfter"
+              [matDatepicker]="pickerEarly"
+              [value]="currentUser?.earliestDateISO"
+              (dateInput)="earliestDateChanged($event, pickerEarly)"
+            />
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="pickerEarly"
+            ></mat-datepicker-toggle>
+            <mat-datepicker touchUi #pickerEarly>
+              <mat-datepicker-actions>
+                <button
+                  mat-stroked-button
+                  matDatepickerCancel
+                  (click)="earliestDateChanged(null, pickerEarly)"
+                >
+                  <mat-icon>event_busy</mat-icon>
+                  Clear
+                </button>
+                <button mat-stroked-button matDatepickerApply>
+                  <mat-icon>event_available</mat-icon>
+                  Apply
+                </button>
+              </mat-datepicker-actions>
+            </mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="full-width-center">
+          <mat-form-field class="almost-full-width-input">
+            <mat-label>Set Latest Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="pickerLate"
+              [matDatepickerFilter]="datePickerFilterOutBefore"
+              [value]="currentUser?.latestDateISO"
+              (dateInput)="latestDateChanged($event, pickerLate)"
+            />
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="pickerLate"
+            ></mat-datepicker-toggle>
+            <mat-datepicker touchUi #pickerLate>
+              <mat-datepicker-actions>
+                <button
+                  mat-stroked-button
+                  matDatepickerCancel
+                  (click)="latestDateChanged(null, pickerEarly)"
+                >
+                  <mat-icon>event_busy</mat-icon>
+                  Clear
+                </button>
+                <button mat-stroked-button matDatepickerApply>
+                  <mat-icon>event_available</mat-icon>
+                  Apply
+                </button>
+              </mat-datepicker-actions>
+            </mat-datepicker>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
   @if (filteredRounds().length) {
     <div class="full-width-center">
@@ -163,6 +251,16 @@
         (click)="viewRound(round.id)"
       ></tr>
     </table>
+  } @else {
+    <br />
+    <div class="full-width-center">
+      <div class="center-text padding-inline-16">
+        No rounds of golf matching the criteria. Please try broadening your
+        search.
+      </div>
+    </div>
+    <br />
+    <ng-container *ngTemplateOutlet="addActions"></ng-container>
   }
 } @else {
   <div class="full-width-center">No rounds of golf recorded</div>
